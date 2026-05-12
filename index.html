@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PGA Championship Pool 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:        #0a1628;
+    --green-mid:    #1a2f50;
+    --green-light:  #2a4a7a;
+    --gold:         #c8a951;
+    --cream:        #f0eee8;
+    --cream-dim:    #b8b0a0;
+    --bg:           #060e1a;
+    --bg-card:      #0d1a2e;
+    --border:       #162238;
+    --border-light: #243a5c;
+    --score-under:  #5dbb7a;
+    --score-over:   #e06060;
+    --score-even:   #b8b0a0;
+  }
+  body { background:var(--bg); color:var(--cream); font-family:'Cormorant Garamond',Georgia,serif; min-height:100vh; font-size:15px; }
+
+  /* HEADER */
+  #app-header { background:linear-gradient(180deg,var(--green) 0%,var(--bg) 100%); border-bottom:1px solid var(--border); padding:0 20px; position:sticky; top:0; z-index:100; }
+  .header-inner { max-width:700px; margin:0 auto; }
+  .header-top { display:flex; align-items:center; justify-content:space-between; padding:16px 0 10px; gap:12px; }
+  .logo-row { display:flex; align-items:center; gap:10px; }
+  .logo-m { width:36px; height:36px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; color:var(--green); font-family:Georgia,serif; box-shadow:0 0 14px rgba(240,192,64,0.4); flex-shrink:0; }
+  .header-eyebrow { color:var(--gold); font-size:10px; letter-spacing:3.5px; text-transform:uppercase; font-family:Georgia,serif; margin-bottom:1px; }
+  .header-title { font-size:22px; font-weight:700; letter-spacing:0.5px; color:var(--cream); }
+  .header-title span { color:var(--gold); }
+  .sponsor-link { display:inline-block; margin-top:3px; color:var(--cream-dim); font-size:11px; font-style:italic; text-decoration:none; border-bottom:1px solid rgba(200,191,168,0.3); padding-bottom:1px; transition:color 0.15s; }
+  .sponsor-link:hover { color:var(--gold); }
+  .refresh-btn { background:rgba(26,74,46,0.8); border:1px solid var(--green-light); color:var(--gold); border-radius:6px; padding:6px 11px; cursor:pointer; font-size:15px; flex-shrink:0; }
+  .score-updated { color:var(--border-light); font-size:10px; letter-spacing:1px; padding-bottom:6px; font-family:Georgia,serif; display:none; }
+  .tab-bar { display:flex; gap:2px; border-top:1px solid var(--border); }
+  .tab-btn { padding:11px 20px; background:transparent; border:none; border-bottom:3px solid transparent; color:rgba(200,191,168,0.5); font-size:13px; cursor:pointer; font-family:'Cormorant Garamond',Georgia,serif; letter-spacing:1px; text-transform:uppercase; transition:all 0.15s; }
+  .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+
+  /* BODY */
+  #app-body { max-width:700px; margin:0 auto; padding:24px 16px 80px; }
+  .toast { background:rgba(26,74,46,0.4); border:1px solid var(--green-light); border-radius:8px; padding:14px 20px; margin-bottom:20px; text-align:center; color:var(--gold); font-size:16px; display:none; }
+  .toast.show { display:block; }
+  .scoring-note { background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:8px; padding:11px 16px; margin-bottom:20px; font-size:13px; color:var(--cream-dim); }
+  .scoring-note strong { color:var(--gold); font-family:Georgia,serif; font-size:12px; letter-spacing:0.5px; }
+  .lock-banner { background:var(--bg-card); border:1px solid rgba(240,192,64,0.4); border-left:3px solid var(--gold); border-radius:8px; padding:12px 16px; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+  .lock-banner-icon { font-size:18px; }
+  .lock-banner-title { color:var(--gold); font-family:Georgia,serif; font-size:12px; font-weight:700; }
+  .lock-banner-sub { color:var(--cream-dim); font-size:12px; margin-top:2px; }
+
+  /* LEADERBOARD */
+  .score-row { margin-bottom:8px; }
+  .score-row-header { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:13px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.15s; }
+  .score-row-header.medal-1 { background:linear-gradient(135deg,rgba(26,74,46,0.8),var(--bg-card)); border-color:rgba(240,192,64,0.5); }
+  .score-row-header.medal-2 { background:linear-gradient(135deg,rgba(26,74,46,0.8),var(--bg-card)); border-color:rgba(184,184,184,0.5); }
+  .score-row-header.medal-3 { background:linear-gradient(135deg,rgba(26,74,46,0.8),var(--bg-card)); border-color:rgba(205,124,74,0.5); }
+  .score-row-header.expanded { border-radius:8px 8px 0 0; }
+  .rank-badge { width:30px; height:30px; border-radius:50%; background:var(--border); color:var(--border-light); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; flex-shrink:0; font-family:Georgia,serif; }
+  .rank-badge.gold   { background:var(--gold); color:var(--bg); }
+  .rank-badge.silver { background:#b8b8b8; color:var(--bg); }
+  .rank-badge.bronze { background:#cd8c4a; color:var(--bg); }
+  .entry-info { flex:1; min-width:0; }
+  .entry-team { color:var(--cream); font-weight:700; font-size:17px; }
+  .entry-sub { color:rgba(200,191,168,0.55); font-size:11px; margin-top:1px; font-family:Georgia,serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .entry-sub.locked { color:var(--border-light); font-style:italic; }
+  .entry-score { text-align:right; flex-shrink:0; }
+  .score-val { font-family:Georgia,serif; font-size:24px; font-weight:800; line-height:1; }
+  .score-val.under { color:var(--score-under); }
+  .score-val.over  { color:var(--score-over); }
+  .score-val.even  { color:var(--score-even); }
+  .score-val.hidden { color:var(--border-light); }
+  .score-label { color:var(--border-light); font-size:9px; letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+  .expand-arrow { color:var(--border-light); font-size:12px; }
+  .score-detail { background:#0a1610; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; overflow:hidden; display:none; }
+  .score-detail.open { display:block; }
+  .detail-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .detail-table th { padding:7px 8px; text-align:center; color:var(--border-light); font-weight:500; font-size:10px; letter-spacing:1px; font-family:Georgia,serif; background:var(--bg); }
+  .detail-table th:first-child { text-align:left; padding-left:14px; }
+  .detail-table th:last-child  { text-align:right; padding-right:14px; }
+  .detail-table td { padding:8px; text-align:center; font-family:Georgia,serif; border-top:1px solid var(--border); }
+  .detail-table td:first-child { text-align:left; padding-left:14px; font-family:'Cormorant Garamond',Georgia,serif; }
+  .detail-table td:last-child  { text-align:right; padding-right:14px; font-weight:700; }
+  .detail-table tr.best4 { background:rgba(26,74,46,0.3); }
+  .g-name { color:var(--cream-dim); }
+  .g-name.counting { color:var(--score-under); font-weight:600; }
+  .star { font-size:9px; margin-right:5px; }
+  .empty-state { text-align:center; padding:60px 20px; border:1px dashed var(--border); border-radius:10px; }
+  .empty-icon { font-size:36px; margin-bottom:12px; }
+  .empty-title { color:var(--cream-dim); font-size:15px; }
+  .empty-sub { color:var(--border-light); font-size:13px; margin-top:4px; font-family:Georgia,serif; }
+  .entry-meta { color:var(--cream-dim); font-size:12px; font-family:Georgia,serif; margin-bottom:14px; display:flex; justify-content:space-between; }
+
+  /* FORM */
+  label { display:block; color:var(--cream-dim); font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:7px; }
+  input[type="text"], input[type="password"] { width:100%; background:#0a1810; border:1px solid var(--border-light); border-radius:6px; padding:11px 14px; color:var(--cream); font-size:15px; font-family:'Cormorant Garamond',Georgia,serif; outline:none; transition:border-color 0.2s; }
+  input[type="text"]:focus, input[type="password"]:focus { border-color:var(--gold); }
+  .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .field-block { margin-bottom:16px; }
+  .passphrase-hint { color:var(--border-light); font-size:10px; font-style:italic; text-transform:none; letter-spacing:0; }
+  .pick-counter-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .pick-counter-label { color:var(--cream-dim); font-size:13px; }
+  .pick-counter-label strong { color:var(--gold); }
+  .pick-badge { background:rgba(30,56,40,0.8); color:var(--border-light); border:1px solid var(--border); border-radius:20px; padding:3px 13px; font-size:11px; font-weight:700; font-family:Georgia,serif; transition:all 0.2s; }
+  .pick-badge.complete { background:rgba(240,192,64,0.15); color:var(--gold); border-color:rgba(240,192,64,0.6); }
+  .tier-card { border-radius:10px; overflow:hidden; margin-bottom:14px; }
+  .tier-header { background:linear-gradient(135deg,rgba(26,74,46,0.8),var(--bg-card)); border-bottom-width:2px; border-bottom-style:solid; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; }
+  .tier-label { font-weight:700; font-size:15px; }
+  .tier-odds { color:rgba(200,191,168,0.6); font-size:11px; margin-left:10px; }
+  .tier-count { color:var(--border-light); font-size:10px; margin-left:8px; }
+  .tier-sel-badge { font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; border-width:1px; border-style:solid; }
+  .tier-pick-hint { color:var(--border-light); font-size:11px; }
+  .tier-search { padding:8px 12px; background:var(--bg); border-bottom:1px solid var(--border); }
+  .tier-search input { padding:7px 10px; font-size:12px; }
+  .golfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; max-height:270px; overflow-y:auto; background:var(--bg-card); }
+  .golfer-grid.short { max-height:none; }
+  .golfer-btn { background:transparent; border:none; border-top:1px solid var(--border); padding:10px 14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:background 0.12s; text-align:left; width:100%; }
+  .golfer-btn:nth-child(odd) { border-right:1px solid var(--border); }
+  .golfer-btn.sm { padding:8px 12px; }
+  .golfer-btn.disabled { opacity:0.28; cursor:not-allowed; }
+  .golfer-btn.selected { background:rgba(240,192,64,0.1); }
+  .golfer-inner { display:flex; align-items:center; gap:8px; overflow:hidden; }
+  .check-box { width:14px; height:14px; border-radius:3px; flex-shrink:0; border:1.5px solid var(--border-light); background:transparent; display:flex; align-items:center; justify-content:center; transition:all 0.12s; }
+  .check-box.checked { border-color:var(--gold); background:var(--gold); }
+  .check-svg { display:none; }
+  .check-box.checked .check-svg { display:block; }
+  .g-name-btn { font-size:12px; color:var(--cream-dim); font-family:'Cormorant Garamond',Georgia,serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .g-name-btn.sel { color:var(--cream); font-weight:600; }
+  .g-odds-btn { font-size:10px; font-family:Georgia,serif; flex-shrink:0; margin-left:4px; }
+  .no-results { padding:16px; color:var(--border-light); font-size:12px; grid-column:1/-1; text-align:center; }
+  .form-error { color:#e08080; font-size:13px; margin-bottom:12px; padding:9px 14px; background:rgba(224,96,96,0.1); border-radius:6px; border:1px solid rgba(224,96,96,0.3); display:none; }
+  .form-error.show { display:block; }
+  .submit-btn { width:100%; padding:14px; border-radius:8px; font-size:15px; font-weight:700; font-family:'Cormorant Garamond',Georgia,serif; letter-spacing:1.5px; text-transform:uppercase; transition:all 0.2s; cursor:not-allowed; background:var(--bg-card); color:var(--border-light); border:1px solid var(--border); }
+  .submit-btn.ready { background:linear-gradient(135deg,var(--green),var(--green-mid)); color:var(--gold); border-color:var(--green-light); cursor:pointer; box-shadow:0 4px 20px rgba(26,74,46,0.6); }
+  .edit-link-wrap { text-align:center; margin-top:18px; }
+  .edit-link { background:none; border:none; color:var(--cream-dim); font-size:12px; cursor:pointer; font-family:Georgia,serif; font-style:italic; text-decoration:underline; padding:0; }
+  .edit-link:hover { color:var(--gold); }
+  .info-box { background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:8px; padding:14px 18px; margin-bottom:22px; }
+  .info-box-title { color:var(--gold); font-family:Georgia,serif; font-size:12px; letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
+  .info-box-sub { color:var(--cream-dim); font-size:13px; }
+  .back-btn { background:none; border:none; color:var(--cream-dim); font-size:12px; cursor:pointer; font-family:Georgia,serif; margin-bottom:20px; padding:0; letter-spacing:1px; }
+  .back-btn:hover { color:var(--gold); }
+  #app-footer { border-top:1px solid var(--border); padding:14px 20px; text-align:center; color:var(--border-light); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-family:Georgia,serif; }
+  .loading-state { text-align:center; padding:60px; }
+  .loading-icon { font-size:32px; margin-bottom:12px; }
+  .loading-text { color:var(--cream-dim); font-size:14px; }
+  @media(max-width:480px) { .field-grid { grid-template-columns:1fr; } .header-title { font-size:18px; } .tab-btn { padding:11px 14px; font-size:12px; } }
+
+  /* ADMIN PANEL */
+  #admin-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; overflow-y:auto; padding:20px; }
+  #admin-overlay.show { display:block; }
+  .admin-box { max-width:780px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border-light); border-radius:12px; overflow:hidden; }
+  .admin-header { background:var(--green); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
+  .admin-header h2 { color:var(--gold); font-family:Georgia,serif; font-size:18px; font-weight:700; margin:0; }
+  .admin-close { background:none; border:none; color:var(--cream-dim); font-size:22px; cursor:pointer; padding:0; line-height:1; }
+  .admin-close:hover { color:var(--gold); }
+  .admin-body { padding:20px; }
+  .admin-login { max-width:320px; margin:0 auto; padding:20px 0; }
+  .admin-login label { display:block; color:var(--cream-dim); font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:7px; }
+  .admin-login input { width:100%; background:#0a1810; border:1px solid var(--border-light); border-radius:6px; padding:11px 14px; color:var(--cream); font-size:15px; font-family:'Cormorant Garamond',Georgia,serif; outline:none; margin-bottom:12px; box-sizing:border-box; }
+  .admin-login input:focus { border-color:var(--gold); }
+  .admin-btn { width:100%; padding:12px; background:linear-gradient(135deg,var(--green),var(--green-mid)); color:var(--gold); border:1px solid var(--green-light); border-radius:8px; font-size:14px; font-weight:700; font-family:'Cormorant Garamond',Georgia,serif; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; }
+  .admin-error { color:#e08080; font-size:13px; margin-bottom:10px; text-align:center; display:none; }
+  .admin-error.show { display:block; }
+  .admin-round-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .admin-round-tab { padding:8px 16px; background:transparent; border:none; border-bottom:3px solid transparent; color:var(--cream-dim); font-size:12px; cursor:pointer; font-family:Georgia,serif; letter-spacing:1px; text-transform:uppercase; transition:all 0.15s; }
+  .admin-round-tab.active { color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+  .admin-note { background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--green-light); border-radius:0 8px 8px 0; padding:10px 14px; margin-bottom:18px; font-size:12px; color:var(--cream-dim); }
+  .admin-note strong { color:var(--green-light); }
+  .admin-golfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
+  .admin-golfer-row { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; }
+  .admin-golfer-name { flex:1; font-size:12px; color:var(--cream-dim); font-family:'Cormorant Garamond',Georgia,serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .admin-score-input { width:60px; background:#0a1810; border:1px solid var(--border-light); border-radius:4px; padding:5px 8px; color:var(--cream); font-size:13px; font-family:Georgia,serif; text-align:center; outline:none; }
+  .admin-score-input:focus { border-color:var(--gold); }
+  .admin-score-input.has-val { color:var(--score-under); border-color:var(--green-light); }
+  .admin-score-input.over-par { color:var(--score-over); }
+  .admin-score-input.even-par { color:var(--score-even); }
+  .admin-save-btn { width:100%; padding:13px; background:linear-gradient(135deg,var(--green),var(--green-mid)); color:var(--gold); border:1px solid var(--green-light); border-radius:8px; font-size:15px; font-weight:700; font-family:'Cormorant Garamond',Georgia,serif; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; margin-bottom:10px; }
+  .admin-save-btn:hover { background:var(--green-light); }
+  .admin-status { text-align:center; font-size:13px; color:var(--score-under); min-height:20px; margin-top:6px; }
+  .admin-cut-note { font-size:11px; color:var(--border-light); text-align:center; margin-top:8px; font-style:italic; }
+  @media(max-width:520px) { .admin-golfer-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// 🔧 PASTE YOUR WEB APP URL HERE (from Google Apps Script)
+// ════════════════════════════════════════════════════════════
+const API_URL = "https://script.google.com/macros/s/AKfycbxE4JSwsS5Hm12LatBO7JC5KWyDynGUP1TDAimtTEaMijr9L2djllSZXjwRuJXUPIUI/exec";
+// ════════════════════════════════════════════════════════════
+
+// ── LOCKOUT: Thu April 9 2026 8am ET ────────────────────────
+const LOCKOUT = new Date("2026-05-14T08:00:00-04:00");
+const picksVisible = () => new Date() >= LOCKOUT;
+
+// ── TIERS ────────────────────────────────────────────────────
+const GOLD = "#f0c040";
+const TIERS = [
+  { tier:1, label:"Tier 1 — Favorites",   odds:"+480 to +1800",    color:GOLD,      golfers:["Scottie Scheffler (+480)","Rory McIlroy (+850)","Cameron Young (+1200)","Jon Rahm (+1500)","Xander Schauffele (+1600)","Ludvig Åberg (+1800)"] },
+  { tier:2, label:"Tier 2 — Contenders",  odds:"+2200 to +2700",   color:"#7ec8a0", golfers:["Matt Fitzpatrick (+2200)","Bryson DeChambeau (+2200)","Tommy Fleetwood (+2700)","Collin Morikawa (+4000)","Patrick Cantlay (+4000)","Brooks Koepka (+4000)"] },
+  { tier:3, label:"Tier 3 — Dark Horses", odds:"+4500 to +6000",   color:"#a8d8b8", golfers:["Min Woo Lee (+4500)","Justin Thomas (+4500)","Nicolai Højgaard (+5000)","Justin Rose (+5500)","Russell Henley (+5500)","Tyrrell Hatton (+5500)"] },
+  { tier:4, label:"Tier 4 — Longshots",   odds:"+6000 to +8000",   color:"#d4c97a", golfers:["Adam Scott (+6000)","Viktor Hovland (+6000)","Si Woo Kim (+6000)","Sam Burns (+6000)","Chris Gotterup (+6000)","Rickie Fowler (+6000)"] },
+  { tier:5, label:"Tier 5 — Big Shots",   odds:"+8000 to +12000",  color:"#c8b88a", golfers:["J.J. Spaun (+10000)","Hideki Matsuyama (+8000)","Shane Lowry (+8000)","Robert MacIntyre (+8000)","Akshay Bhatia (+10000)","Patrick Reed (+10000)"] },
+  { tier:6, label:"Tier 6 — The Field",   odds:"+10000 and beyond", color:"#98b8a0", golfers:[
+    "Sepp Straka (+10000)","Jake Knapp (+10000)","Keegan Bradley (+10000)","Harris English (+10000)",
+    "Max Homa (+10000)","Jason Day (+10000)","Tom McKibbin (+12000)","Wyndham Clark (+12000)",
+    "Corey Conners (+12000)","Jordan Spieth (+12000)","Jacob Bridgeman (+12000)","Nick Taylor (+14000)",
+    "Ben Griffin (+14000)","Brian Harman (+14000)","Daniel Berger (+14000)","Cameron Smith (+15000)",
+    "Rasmus Højgaard (+15000)","Kurt Kitayama (+15000)","Aaron Rai (+15000)","Ryan Fox (+17500)",
+    "Sungjae Im (+17500)","Max Greyserman (+17500)","Tony Finau (+20000)","Dustin Johnson (+20000)",
+    "Sergio Garcia (+20000)","Will Zalatoris (+20000)","Sahith Theegala (+20000)","Thomas Detry (+20000)",
+    "Haotong Li (+22000)","Carlos Ortiz (+22000)","Harry Hall (+25000)","Ryan Gerard (+25000)",
+    "Alex Noren (+25000)","Marco Penge (+25000)","Maverick McNealy (+25000)","Nico Echavarria (+30000)",
+    "Danny Willett (+30000)","Bubba Watson (+35000)","Fred Couples (+50000)","Mike Weir (+50000)",
+    "Vijay Singh (+75000)","Angel Cabrera (+100000)","Jose Maria Olazabal (+100000)",
+    "Brandt Snedeker (+50000)","Sudarshan Yellamaraju (+25000)","Kristoffer Reitan (+10000)",
+    "Si Woo Kim (+6000)","Zach Johnson (+100000)","Y.E. Yang (+500000)"
+  ]}
+];
+
+const stripOdds = s => s.replace(/\s*\(.*\)/,"").trim();
+const ALL_GOLFERS = TIERS.flatMap(t => t.golfers.map(stripOdds));
+
+// ── STATE ────────────────────────────────────────────────────
+let entries  = [];
+let scores   = {};
+let view     = "leaderboard";
+let formMode = "new";
+let picks    = [];
+let editingEntry  = null;
+let lastUpdated   = null;
+let loadingScores = false;
+
+// ── API CALLS ────────────────────────────────────────────────
+async function apiGet(action) {
+  const res = await fetch(API_URL + "?action=" + action);
+  return res.json();
+}
+
+async function apiPost(body) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function loadEntries() {
+  try {
+    const data = await apiGet("getEntries");
+    entries = data.entries || [];
+  } catch(e) { console.warn("Could not load entries", e); }
+  render();
+}
+
+async function saveEntry(entry) {
+  await apiPost({ action: "saveEntry", entry });
+  await loadEntries();
+}
+
+async function fetchScores() {
+  if (loadingScores) return;
+  loadingScores = true;
+  document.getElementById("refresh-btn").textContent = "⏳";
+  try {
+    const cached = await apiGet("getScores");
+    if (cached.scores && Object.keys(cached.scores).length > 0) {
+      scores = cached.scores;
+      lastUpdated = new Date();
+    }
+  } catch(e) {
+    console.warn("Score fetch failed:", e);
+  } finally {
+    loadingScores = false;
+    document.getElementById("refresh-btn").textContent = "🔄";
+    render();
+  }
+}
+
+// ── SCORE HELPERS ────────────────────────────────────────────
+function calcScore(entryPicks) {
+  const gs = (entryPicks||[]).map(name => {
+    const s = scores[name];
+    if (!s) return { name, total:0, rounds:{} };
+    const rounds = {}; let total = 0;
+    ["R1","R2","R3","R4"].forEach(r => {
+      if (s[r] !== null && s[r] !== undefined) { rounds[r]=s[r]; total+=s[r]; }
+    });
+    return { name, total, rounds };
+  });
+  const sorted = [...gs].sort((a,b) => a.total - b.total);
+  const best4 = sorted.slice(0,4);
+  const best4Total = best4.reduce((sum,g)=>sum+g.total, 0);
+  return { gs, best4, best4Total };
+}
+
+function fmtScore(n) {
+  if (n===null||n===undefined) return "—";
+  if (n===0) return "E";
+  return n>0 ? "+"+n : ""+n;
+}
+
+function scoreClass(n) {
+  if (n===null||n===undefined) return "even";
+  return n<0 ? "under" : n>0 ? "over" : "even";
+}
+
+function scoreColor(n) {
+  if (n===null||n===undefined) return "#c8bfa8";
+  return n<0 ? "#5dbb7a" : n>0 ? "#e06060" : "#c8bfa8";
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function render() {
+  // Update score timestamp
+  const su = document.getElementById("score-updated");
+  if (lastUpdated) { su.textContent = "Scores updated " + lastUpdated.toLocaleTimeString(); su.style.display="block"; }
+  // Active tab
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab===view));
+  if (view==="leaderboard") renderLeaderboard();
+  else renderForm();
+}
+
+function renderLeaderboard() {
+  document.getElementById("leaderboard-view").style.display="block";
+  document.getElementById("form-view").style.display="none";
+  const locked = !picksVisible();
+  const lb = document.getElementById("leaderboard-content");
+
+  if (entries.length===0) {
+    lb.innerHTML=`<div class="empty-state"><div class="empty-icon">🏌️</div><div class="empty-title">No entries yet.</div><div class="empty-sub">Be the first to submit your picks!</div></div>`;
+    return;
+  }
+
+  const ranked = [...entries].map(e => {
+    const { best4Total } = calcScore(e.picks);
+    return { ...e, score: best4Total };
+  }).sort((a,b) => locked ? 0 : a.score - b.score);
+
+  const lockBanner = locked ? `<div class="lock-banner"><div class="lock-banner-icon">🔒</div><div><div class="lock-banner-title">Picks sealed until Thursday May 14 at 8:00 AM ET</div><div class="lock-banner-sub">All entrants shown — selections revealed at first tee.</div></div></div>` : "";
+
+  const medals = ["gold","silver","bronze"];
+  const rows = ranked.map((e,i) => {
+    const rank = i+1;
+    const mClass = rank<=3 ? "medal-"+rank : "";
+    const bClass = rank<=3 ? medals[rank-1] : "";
+    const { gs, best4, best4Total } = calcScore(e.picks);
+    const scoreVal = locked
+      ? `<div class="score-val hidden">—</div>`
+      : `<div class="score-val ${scoreClass(best4Total)}">${fmtScore(best4Total)}</div>`;
+    const subLine = locked
+      ? `<div class="entry-sub locked">🔒 Hidden until Thu May 14, 8am ET</div>`
+      : `<div class="entry-sub">${e.teamName?e.name+" · ":""}Best 4: ${best4.map(g=>g.name.split(" ").pop()).join(", ")}</div>`;
+    const detailRows = !locked ? gs.map(g => {
+      const inB4 = best4.some(b=>b.name===g.name);
+      return `<tr class="${inB4?"best4":""}">
+        <td><span class="g-name ${inB4?"counting":""}">${inB4?`<span class="star">★</span>`:""}${g.name}</span></td>
+        ${["R1","R2","R3","R4"].map(r=>`<td style="color:${scoreColor(g.rounds[r])}">${fmtScore(g.rounds[r])}</td>`).join("")}
+        <td style="color:${scoreColor(g.total)}">${fmtScore(g.total)}</td>
+      </tr>`;
+    }).join("") : "";
+    const detail = !locked ? `<div class="score-detail" id="detail-${e.timestamp}"><table class="detail-table"><thead><tr><th>Golfer</th><th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>Tot</th></tr></thead><tbody>${detailRows}</tbody></table></div>` : "";
+    return `<div class="score-row">
+      <div class="score-row-header ${mClass}" onclick="toggleDetail('${e.timestamp}',this)" ${locked?"style='cursor:default'":""}>
+        <div class="rank-badge ${bClass}">${rank}</div>
+        <div class="entry-info"><div class="entry-team">${e.teamName||e.name}</div>${subLine}</div>
+        <div class="entry-score">${scoreVal}<div class="score-label">total</div></div>
+        ${!locked?`<div class="expand-arrow" id="arrow-${e.timestamp}">▼</div>`:""}
+      </div>${detail}
+    </div>`;
+  }).join("");
+
+  lb.innerHTML = lockBanner + `<div class="entry-meta"><span>${entries.length} participant${entries.length!==1?"s":""}</span>${!locked?`<span>★ counting toward score · click to expand</span>`:""}</div>` + rows;
+}
+
+window.toggleDetail = function(ts, el) {
+  if (!picksVisible()) return;
+  const d = document.getElementById("detail-"+ts);
+  const a = document.getElementById("arrow-"+ts);
+  if (!d) return;
+  const open = d.classList.toggle("open");
+  el.classList.toggle("expanded", open);
+  if (a) a.textContent = open ? "▲" : "▼";
+};
+
+// ── FORM ─────────────────────────────────────────────────────
+function renderForm() {
+  document.getElementById("leaderboard-view").style.display="none";
+  document.getElementById("form-view").style.display="block";
+  const fv = document.getElementById("form-view");
+  if (formMode==="new") renderNewForm(fv);
+  else if (formMode==="verify") renderVerifyForm(fv);
+  else renderEditForm(fv);
+}
+
+function tierHTML(t) {
+  const isLarge = t.golfers.length > 10;
+  const selInTier = t.golfers.find(g=>picks.includes(stripOdds(g)));
+  const badge = selInTier
+    ? `<span class="tier-sel-badge" style="color:${t.color};background:${t.color}18;border-color:${t.color}40">✓ ${stripOdds(selInTier)}</span>`
+    : `<span class="tier-pick-hint">Pick 1</span>`;
+  const search = isLarge ? `<div class="tier-search"><input type="text" placeholder="Search players..." oninput="filterTier(${t.tier},this.value)" id="search-${t.tier}" style="border:1px solid var(--border-light)"/></div>` : "";
+  return `<div class="tier-card" style="border:1px solid ${t.color}35">
+    <div class="tier-header" style="border-bottom-color:${t.color}60">
+      <div><span class="tier-label" style="color:${t.color}">${t.label}</span><span class="tier-odds">${t.odds}</span>${isLarge?`<span class="tier-count">(${t.golfers.length})</span>`:""}</div>
+      ${badge}
+    </div>
+    ${search}
+    <div class="golfer-grid ${isLarge?"":"short"}" id="grid-${t.tier}">${golferBtns(t,t.golfers)}</div>
+  </div>`;
+}
+
+function golferBtns(t, list) {
+  const tierPicked = t.golfers.some(g=>picks.includes(stripOdds(g)));
+  return list.map(g => {
+    const name = stripOdds(g);
+    const odds = (g.match(/\(([^)]+)\)/)||[])[1]||"";
+    const sel = picks.includes(name);
+    const dis = !sel && tierPicked;
+    return `<button class="golfer-btn ${t.golfers.length>10?"sm":""} ${dis?"disabled":""} ${sel?"selected":""}"
+      onclick="togglePick('${name.replace(/'/g,"\\'")}',${t.tier})"
+      style="${sel?`background:${t.color}18`:""}"
+      ${dis?"disabled":""}>
+      <div class="golfer-inner">
+        <div class="check-box ${sel?"checked":""}">
+          <svg class="check-svg" width="8" height="8" viewBox="0 0 9 9"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="#0e1f14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <span class="g-name-btn ${sel?"sel":""}">${name}</span>
+      </div>
+      <span class="g-odds-btn" style="color:${t.color}cc">${odds}</span>
+    </button>`;
+  }).join("");
+}
+
+function renderNewForm(fv) {
+  fv.innerHTML = `
+    <div class="field-grid">
+      <div><label>Your Name</label><input type="text" id="f-name" placeholder="e.g. John Smith"/></div>
+      <div><label>Team Name</label><input type="text" id="f-team" placeholder="e.g. Amen Corner"/></div>
+    </div>
+    <div class="field-block">
+      <label>Passphrase <span class="passphrase-hint">(remember this — needed to edit picks later)</span></label>
+      <input type="password" id="f-pass" placeholder="e.g. birdie2026"/>
+    </div>
+    <div class="pick-counter-row">
+      <div class="pick-counter-label">Select <strong>1 golfer from each tier</strong> — 6 total</div>
+      <div class="pick-badge" id="pick-badge">${picks.length} / 6</div>
+    </div>
+    ${TIERS.map(t=>tierHTML(t)).join("")}
+    <div class="form-error" id="form-error"></div>
+    <button class="submit-btn ${picks.length===6?"ready":""}" id="submit-btn" onclick="handleNew()">⛳ Submit My Picks</button>
+    <div class="edit-link-wrap"><button class="edit-link" onclick="goVerify()">Already submitted? Edit your picks →</button></div>`;
+}
+
+function renderVerifyForm(fv) {
+  fv.innerHTML = `
+    <button class="back-btn" onclick="goNew()">← Back</button>
+    <div class="info-box"><div class="info-box-title">Edit Your Picks</div><div class="info-box-sub">Enter your team name and passphrase to load your picks.</div></div>
+    <div class="field-grid">
+      <div><label>Team Name</label><input type="text" id="v-team" placeholder="e.g. Amen Corner"/></div>
+      <div><label>Passphrase</label><input type="password" id="v-pass" placeholder="Your passphrase"/></div>
+    </div>
+    <div class="form-error" id="form-error"></div>
+    <button class="submit-btn ready" onclick="handleVerify()">Load My Picks →</button>`;
+}
+
+function renderEditForm(fv) {
+  fv.innerHTML = `
+    <button class="back-btn" onclick="goNew()">← Back</button>
+    <div class="info-box"><div class="info-box-title">Editing: ${editingEntry.teamName}</div><div class="info-box-sub">${editingEntry.name} · Change your selections and resubmit.</div></div>
+    <div class="pick-counter-row">
+      <div class="pick-counter-label">Select <strong>1 golfer from each tier</strong> — 6 total</div>
+      <div class="pick-badge ${picks.length===6?"complete":""}" id="pick-badge">${picks.length} / 6</div>
+    </div>
+    ${TIERS.map(t=>tierHTML(t)).join("")}
+    <div class="form-error" id="form-error"></div>
+    <button class="submit-btn ${picks.length===6?"ready":""}" id="submit-btn" onclick="handleEdit()">✓ Save Updated Picks</button>`;
+}
+
+window.filterTier = function(tierNum, query) {
+  const t = TIERS.find(t=>t.tier===tierNum);
+  const filtered = query ? t.golfers.filter(g=>stripOdds(g).toLowerCase().includes(query.toLowerCase())) : t.golfers;
+  const grid = document.getElementById("grid-"+tierNum);
+  grid.innerHTML = filtered.length===0 ? `<div class="no-results">No players match "${query}"</div>` : golferBtns(t,filtered);
+};
+
+window.togglePick = function(name, tierNum) {
+  const t = TIERS.find(t=>t.tier===tierNum);
+  const tierNames = t.golfers.map(stripOdds);
+  if (picks.includes(name)) picks = picks.filter(p=>p!==name);
+  else { picks = picks.filter(p=>!tierNames.includes(p)); picks.push(name); }
+  updatePickUI();
+  const q = document.getElementById("search-"+tierNum)?.value||"";
+  const filtered = q ? t.golfers.filter(g=>stripOdds(g).toLowerCase().includes(q.toLowerCase())) : t.golfers;
+  document.getElementById("grid-"+tierNum).innerHTML = golferBtns(t, filtered);
+  const card = document.getElementById("grid-"+tierNum).closest(".tier-card");
+  const selInTier = t.golfers.find(g=>picks.includes(stripOdds(g)));
+  const badge = card.querySelector(".tier-header > :last-child");
+  badge.outerHTML = selInTier
+    ? `<span class="tier-sel-badge" style="color:${t.color};background:${t.color}18;border-color:${t.color}40">✓ ${stripOdds(selInTier)}</span>`
+    : `<span class="tier-pick-hint">Pick 1</span>`;
+};
+
+function updatePickUI() {
+  const badge = document.getElementById("pick-badge");
+  const btn   = document.getElementById("submit-btn");
+  if (badge) { badge.textContent=picks.length+" / 6"; badge.className="pick-badge"+(picks.length===6?" complete":""); }
+  if (btn) {
+    const ok = formMode==="edit" || (document.getElementById("f-name")?.value.trim() && document.getElementById("f-team")?.value.trim() && document.getElementById("f-pass")?.value.trim());
+    btn.className = "submit-btn"+(picks.length===6&&ok?" ready":"");
+  }
+}
+
+function showError(msg) { const el=document.getElementById("form-error"); if(el){el.textContent=msg;el.classList.add("show");} }
+function clearError()   { const el=document.getElementById("form-error"); if(el) el.classList.remove("show"); }
+
+window.handleNew = async function() {
+  clearError();
+  const name = document.getElementById("f-name")?.value.trim();
+  const team = document.getElementById("f-team")?.value.trim();
+  const pass = document.getElementById("f-pass")?.value.trim();
+  if (!name) return showError("Please enter your name.");
+  if (!team) return showError("Please enter a team name.");
+  if (!pass) return showError("Please set a passphrase so you can edit your picks later.");
+  if (picks.length<6) return showError(`You've selected ${picks.length}/6 golfers. Pick one from each tier.`);
+  const btn = document.getElementById("submit-btn");
+  btn.textContent = "Saving..."; btn.disabled = true;
+  const entry = { name, teamName:team, passphrase:pass, picks:[...picks], timestamp:Date.now() };
+  await saveEntry(entry);
+  picks=[];
+  showToast("✅ Your picks are saved. Good luck at Aronimink.");
+  view="leaderboard"; render();
+};
+
+window.handleVerify = function() {
+  clearError();
+  const team = document.getElementById("v-team")?.value.trim().toLowerCase();
+  const pass = document.getElementById("v-pass")?.value.trim();
+  const match = entries.find(e=>e.teamName?.toLowerCase()===team && e.passphrase===pass);
+  if (!match) return showError("Team name or passphrase not found. Please check and try again.");
+  editingEntry=match; picks=[...(match.picks||[])]; formMode="edit"; renderForm();
+};
+
+window.handleEdit = async function() {
+  clearError();
+  if (picks.length<6) return showError(`You've selected ${picks.length}/6 golfers. Pick one from each tier.`);
+  const btn = document.getElementById("submit-btn");
+  btn.textContent="Saving..."; btn.disabled=true;
+  await saveEntry({ ...editingEntry, picks:[...picks], editedAt:Date.now() });
+  picks=[]; editingEntry=null; formMode="new";
+  showToast("✅ Picks updated. Good luck at Aronimink.");
+  view="leaderboard"; render();
+};
+
+window.goVerify = ()=>{ formMode="verify"; picks=[]; renderForm(); };
+window.goNew    = ()=>{ formMode="new"; picks=[]; editingEntry=null; renderForm(); };
+
+function showToast(msg) {
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),3500);
+}
+
+window.switchTab = function(tab) {
+  view=tab;
+  if (tab==="enter") { formMode="new"; picks=[]; }
+  render();
+};
+
+document.addEventListener("input", function(e) {
+  if (["f-name","f-team","f-pass"].includes(e.target.id)) {
+    const btn=document.getElementById("submit-btn");
+    if (!btn) return;
+    const ok = document.getElementById("f-name")?.value.trim() && document.getElementById("f-team")?.value.trim() && document.getElementById("f-pass")?.value.trim();
+    btn.className="submit-btn"+(picks.length===6&&ok?" ready":"");
+  }
+});
+
+// ── ADMIN PANEL ───────────────────────────────────────────────
+// 🔑 SET YOUR ADMIN PASSWORD HERE
+const ADMIN_PASSWORD = "pga2026admin";
+
+let adminRound = "R1";
+let adminLoggedIn = false;
+
+window.openAdmin = function() {
+  document.getElementById("admin-overlay").classList.add("show");
+  if (!adminLoggedIn) renderAdminLogin();
+  else renderAdminScores();
+};
+
+window.closeAdmin = function() {
+  document.getElementById("admin-overlay").classList.remove("show");
+};
+
+function renderAdminLogin() {
+  document.getElementById("admin-content").innerHTML = `
+    <div class="admin-login">
+      <label>Admin Password</label>
+      <input type="password" id="admin-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkAdminPass()"/>
+      <div class="admin-error" id="admin-error">Incorrect password. Try again.</div>
+      <button class="admin-btn" onclick="checkAdminPass()">Enter Admin Panel</button>
+    </div>`;
+}
+
+window.checkAdminPass = function() {
+  const val = document.getElementById("admin-pass")?.value;
+  if (val === ADMIN_PASSWORD) {
+    adminLoggedIn = true;
+    renderAdminScores();
+  } else {
+    document.getElementById("admin-error").classList.add("show");
+  }
+};
+
+function renderAdminScores() {
+  const rounds = ["R1","R2","R3","R4"];
+  const roundLabels = { R1:"Round 1", R2:"Round 2", R3:"Round 3", R4:"Round 4" };
+
+  const tabs = rounds.map(r =>
+    `<button class="admin-round-tab ${adminRound===r?"active":""}" onclick="setAdminRound('${r}')">${roundLabels[r]}</button>`
+  ).join("");
+
+  const golferRows = ALL_GOLFERS.map(name => {
+    const current = scores[name]?.[adminRound];
+    const hasVal = current !== null && current !== undefined;
+    const valClass = hasVal ? (current < 0 ? "has-val" : current > 0 ? "over-par" : "even-par") : "";
+    const displayVal = hasVal ? current : "";
+    return `<div class="admin-golfer-row">
+      <span class="admin-golfer-name" title="${name}">${name}</span>
+      <input type="number" class="admin-score-input ${valClass}" id="ascore-${name.replace(/[^a-zA-Z0-9]/g,'_')}"
+        value="${displayVal}" placeholder="E"
+        min="-20" max="20"
+        oninput="colorScoreInput(this)"
+        title="${name} ${adminRound} score (relative to par, e.g. -3, 0, +2). Leave blank = not played / MC."/>
+    </div>`;
+  }).join("");
+
+  document.getElementById("admin-content").innerHTML = `
+    <div class="admin-note">
+      <strong>How to enter scores:</strong> Use numbers relative to par.
+      Under par = negative (e.g. <strong style="color:var(--score-under)">-4</strong>),
+      over par = positive (e.g. <strong style="color:var(--score-over)">+2</strong>),
+      even par = <strong>0</strong>,
+      not yet played or missed cut = leave <strong>blank</strong>.
+      Check <a href="https://www.masters.com" target="_blank" style="color:var(--gold)">masters.com</a> for live scores.
+    </div>
+    <div class="admin-round-tabs">${tabs}</div>
+    <div class="admin-golfer-grid">${golferRows}</div>
+    <button class="admin-save-btn" onclick="saveAdminScores()">⛳ Save ${roundLabels[adminRound]} Scores</button>
+    <div class="admin-status" id="admin-status"></div>
+    <div class="admin-cut-note">Tip: Players who missed the cut — leave R3 and R4 blank. Their best 2 rounds will still count toward team scores.</div>`;
+}
+
+window.setAdminRound = function(r) {
+  adminRound = r;
+  renderAdminScores();
+};
+
+window.colorScoreInput = function(el) {
+  const v = el.value;
+  el.className = "admin-score-input";
+  if (v === "" || v === null) return;
+  const n = parseInt(v);
+  if (isNaN(n)) return;
+  el.classList.add(n < 0 ? "has-val" : n > 0 ? "over-par" : "even-par");
+};
+
+window.saveAdminScores = async function() {
+  const status = document.getElementById("admin-status");
+  status.textContent = "Saving...";
+  status.style.color = "var(--cream-dim)";
+
+  // Build updated scores object
+  const updated = { ...scores };
+  ALL_GOLFERS.forEach(name => {
+    const key = "ascore-" + name.replace(/[^a-zA-Z0-9]/g, "_");
+    const el = document.getElementById(key);
+    if (!el) return;
+    if (!updated[name]) updated[name] = { R1:null, R2:null, R3:null, R4:null };
+    const val = el.value.trim();
+    updated[name][adminRound] = val === "" ? null : parseInt(val);
+  });
+
+  try {
+    await apiPost({ action: "saveScores", scores: updated });
+    scores = updated;
+    lastUpdated = new Date();
+    status.textContent = "✅ Scores saved successfully!";
+    status.style.color = "var(--score-under)";
+    render();
+    setTimeout(() => { status.textContent = ""; }, 4000);
+  } catch(e) {
+    status.textContent = "❌ Save failed. Check your connection and try again.";
+    status.style.color = "var(--score-over)";
+    console.error(e);
+  }
+};
+
+// Secret admin access: triple-tap the M logo
+let logoTaps = 0, logoTimer = null;
+window.logoTap = function() {
+  logoTaps++;
+  clearTimeout(logoTimer);
+  logoTimer = setTimeout(() => { logoTaps = 0; }, 1000);
+  if (logoTaps >= 3) { logoTaps = 0; openAdmin(); }
+};
+
+// ── INIT ─────────────────────────────────────────────────────
+window.fetchScores = fetchScores;
+loadEntries();
+fetchScores();
+setInterval(fetchScores, 3*60*1000);
+</script>
+
+<header id="app-header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="logo-row">
+        <div class="logo-m" onclick="logoTap()">W</div>
+        <div>
+          <div class="header-eyebrow">Aronimink Golf Club · May 14–17, 2026</div>
+          <div class="header-title">PGA Championship Pool <span>2026</span></div>
+          <a href="https://www.williesgolfgoods.com" target="_blank" rel="noopener noreferrer" class="sponsor-link">Brought to you by Willie's Golf Goods</a>
+        </div>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" onclick="fetchScores()">🔄</button>
+    </div>
+    <div class="score-updated" id="score-updated"></div>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="leaderboard" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+      <button class="tab-btn" data-tab="enter" onclick="switchTab('enter')">⛳ Enter Picks</button>
+    </div>
+  </div>
+</header>
+
+<main id="app-body">
+  <div class="toast" id="toast"></div>
+  <div id="leaderboard-view">
+    <div class="scoring-note"><strong>SCORING: </strong>Pick 1 golfer per tier (6 total). Your score = best 4 golfers' combined score to par. Lowest wins. Missed cut = +8 penalty.</div>
+    <div id="leaderboard-content"><div class="loading-state"><div class="loading-icon">⛳</div><div class="loading-text">Loading pool entries...</div></div></div>
+  </div>
+  <div id="form-view" style="display:none"></div>
+</main>
+
+<footer id="app-footer">Odds via FanDuel Sportsbook · May 11, 2026</footer>
+
+<!-- ADMIN PANEL OVERLAY -->
+<div id="admin-overlay">
+  <div class="admin-box">
+    <div class="admin-header">
+      <h2>⛳ Score Admin Panel — PGA 2026</h2>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-body">
+      <div id="admin-content"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
