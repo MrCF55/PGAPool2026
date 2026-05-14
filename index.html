@@ -267,7 +267,8 @@ async function saveEntry(entry) {
 async function fetchScores() {
   if (loadingScores) return;
   loadingScores = true;
-  document.getElementById("refresh-btn").textContent = "⏳";
+  const btn = document.getElementById("refresh-btn");
+if (btn) btn.textContent = "⏳";
   try {
     const cached = await apiGet("getScores");
     if (cached.scores && Object.keys(cached.scores).length > 0) {
@@ -278,7 +279,8 @@ async function fetchScores() {
     console.warn("Score fetch failed:", e);
   } finally {
     loadingScores = false;
-    document.getElementById("refresh-btn").textContent = "🔄";
+   const btn2 = document.getElementById("refresh-btn");
+if (btn2) btn2.textContent = "🔄";
     render();
   }
 }
